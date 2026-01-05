@@ -1,5 +1,7 @@
+require 'yaml'
+
 class Hangman
-  attr_accessor :hang_word, :right_guesses, :wrong_guesses
+  attr_accessor :hang_word, :right_guesses, :wrong_guesses, :turns_left
 
   def initialize(min = 5, max = 12)
     dict_file = IO.sysopen('./google-10000-english-no-swears.txt')
@@ -13,6 +15,36 @@ class Hangman
     @hang_word = word_choices[rand(0...word_choices.length)]
     @right_guesses = '_' * hang_word.length
     @wrong_guesses = ''
+    @turns_left = 10
+  end
+
+  def save_game(filename = 'save01.yaml')
+    Dir.mkdir('saves') unless Dir.exist?('saves')
+    File.open("saves/#{filename}", 'w') do |file|
+      file.write(to_yaml)
+    end
+  end
+
+  def load_game(filename = 'save01.yaml')
+    save = File.open("saves/#{filename}", 'r')
+    from_yaml(save)
+  end
+
+  def to_yaml
+    YAML.dump({
+                hang_word: @hang_word,
+                right_guesses: @right_guesses,
+                wrong_guesses: @wrong_guesses,
+                turns_left: @turns_left
+              })
+  end
+
+  def from_yaml(string)
+    data = YAML.load string
+    @hang_word = data[:hang_word]
+    @right_guesses = data[:right_guesses]
+    @wrong_guesses = data[:wrong_guesses]
+    @turns_left = data[:turns_left]
   end
 
   def reveal_word
@@ -45,12 +77,12 @@ class Hangman
 
     print 'Guess a letter!: '
     guess = gets.chomp
-    while guess.length != 1 || wrong_guesses.include?(guess)
+    while guess.length != 1 || wrong_guesses.include?(guess) || right_guesses.include?(guess)
       while guess.length != 1
         print 'Incorrect input: Please enter a single letter: '
         guess = gets.chomp
       end
-      while wrong_guesses.include?(guess)
+      while wrong_guesses.include?(guess) || right_guesses.include?(guess)
         print 'Letter already guessed, please guess a new letter: '
         guess = gets.chomp
       end
