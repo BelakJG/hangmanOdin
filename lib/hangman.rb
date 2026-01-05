@@ -22,12 +22,14 @@ class Hangman
     Dir.mkdir('saves') unless Dir.exist?('saves')
     File.open("saves/#{filename}", 'w') do |file|
       file.write(to_yaml)
+      file.close
     end
   end
 
   def load_game(filename = 'save01.yaml')
     save = File.open("saves/#{filename}", 'r')
     from_yaml(save)
+    save.close
   end
 
   def to_yaml
@@ -72,9 +74,6 @@ class Hangman
   end
 
   def take_turn
-    puts ''
-    show_guesses
-
     print 'Guess a letter!: '
     guess = gets.chomp
     while guess.length != 1 || wrong_guesses.include?(guess) || right_guesses.include?(guess)
